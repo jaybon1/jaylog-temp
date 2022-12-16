@@ -1,11 +1,16 @@
 
 from datetime import datetime
+import time
 import bcrypt
 from sqlalchemy.orm import Session
+import jwt
 
 from dto import sign_dto
 from entity.user_entity import UserEntity
 from util import functions
+from config import constants
+from fastapi.encoders import jsonable_encoder
+
 
 USER_ID_EXIST_ERROR = {"code": 1, "message": "이미 존재하는 아이디 입니다."}
 ID_NOT_EXIST_ERROR = {"code": 2, "message": "가입되지 않은 아이디 입니다."}
@@ -31,9 +36,32 @@ def sign_in(reqDTO: sign_dto.ReqSignIn, db: Session):
         return functions.res_generator(status_code=400, error_dict=PASSWORD_INCORRECT_ERROR)
 
     # 정상
-    
+    accessJwtDTO = sign_dto.AccessJwt(
+        idx=userEntity.idx,
+        id=userEntity.id,
+        simpleDesc=userEntity.simple_desc,
+        profileImage=userEntity.profile_image,
+        role=userEntity.role,
+        exp=time.time() + constants.JWT_ACCESS_EXP_SECONDS
+    )
 
-    pass
+    accessToken = jwt.encode(jsonable_encoder(
+        accessJwtDTO), constants.JWT_SALT, algorithm="HS256")
+
+    refreshJwtDTO = sign_dto.RefreshJwt(
+        idx=userEntity.idx,
+        exp=time.time() + constants.JWT_REFRESH_EXP_SECONDS
+    )
+
+    refreshToken = jwt.encode(jsonable_encoder(
+        refreshJwtDTO), constants.JWT_SALT, algorithm="HS256")
+
+    resSignInDTO = sign_dto.ResSignIn(
+        accessToken=accessToken,
+        refreshToken=refreshToken
+    )
+
+    return functions.res_generator(content=resSignInDTO)
 
 
 def sign_up(reqDTO: sign_dto.ReqSignUp, db: Session):
