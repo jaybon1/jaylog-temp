@@ -90,7 +90,7 @@ const Join = () => {
   }, []);
 
   return (
-    <UserInfoLayout isNavbar={true}>
+    <UserInfoLayout isNavbar={false}>
       <Card className="shadow-2-strong" style={{ borderRadius: "1rem" }}>
         <Card.Body className="p-5 text-center">
           <h3 className="mb-3">
@@ -135,6 +135,7 @@ const Join = () => {
             />
           </InputGroup>
           <Button
+            type="button"
             className="btn-primary"
             style={{ width: "100%" }}
             onClick={requestJoin}
