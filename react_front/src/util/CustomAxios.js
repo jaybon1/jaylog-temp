@@ -32,12 +32,12 @@ class CustomAxios {
     }
 
     // accessToken 확인
-    if (accessToken == null || jwtDecode(accessToken.exp < Date.now() / 1000)) {
+    if (accessToken == null || jwtDecode(accessToken).exp < Date.now() / 1000) {
       // accessToken 무효
       // refreshToken 확인
       if (
         refreshToken == null ||
-        jwtDecode(refreshToken.exp < Date.now() / 1000)
+        jwtDecode(refreshToken).exp < Date.now() / 1000
       ) {
         // refreshToken 무효
         localStorage.removeItem("accessToken");
