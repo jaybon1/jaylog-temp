@@ -22,6 +22,10 @@ const Posts = () => {
         }
       })
       .catch((error) => {
+        // if(error.response.status == 401){
+        //   // 로그인페이지로 이동
+        //   // 또는 refresh 해서 재통신
+        // }
         if (error?.response?.data?.detail != null) {
           alert(JSON.stringify(error?.response?.data?.detail));
         } else if (error?.response?.data?.message != null) {
