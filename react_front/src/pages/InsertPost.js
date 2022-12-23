@@ -4,7 +4,9 @@ import ExitImg from "assets/img/exit.svg";
 import WriteLayout from "components/layouts/WriteLayout";
 import { useEffect, useRef, useState } from "react";
 import { Button, Col, Form, Image, Row } from "react-bootstrap";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuthStore } from "stores/RootStore";
+import { customAxios } from "util/CustomAxios";
 
 const InsertPost = () => {
   // // 정규표현식을 이용한 태그 제거
@@ -17,13 +19,130 @@ const InsertPost = () => {
     editor: null,
   });
 
+  const authStore = useAuthStore();
+  const navigate = useNavigate();
+
   const [editorHeight, setEditorHeight] = useState(0);
 
+  // 임시저장
+  const tempPostSave = () => {
+    const tempPost = {
+      title: refs.current.title.value,
+      content: refs.current.editor.getInstance().getMarkdown(),
+    };
+    localStorage.setItem("tempPost", JSON.stringify(tempPost));
+    alert("임시저장되었습니다.");
+  };
+
+  // 임시저장 불러오기
+  const tempPostCheck = () => {
+    const tempPost = localStorage.getItem("tempPost");
+    if (tempPost != null) {
+      if (window.confirm("임시저장된 글이 있습니다. 불러오시겠습니까?")) {
+        const parsedTempPost = JSON.parse(tempPost);
+        refs.current.title.value = parsedTempPost.title;
+        refs.current.editor.getInstance().setMarkdown(parsedTempPost.content);
+      }
+    } else {
+      localStorage.removeItem("tempPost");
+    }
+  };
+
+  // 유효성 체크
+  const validateFields = () => {
+    const title = refs.current.title.value;
+    const content = refs.current.editor.getInstance().getMarkdown();
+
+    if (title === "") {
+      alert("제목을 입력하세요.");
+      return false;
+    }
+    if (content === "") {
+      alert("내용을 입력하세요.");
+      return false;
+    }
+
+    return true;
+  };
+
+  // 게시하기
+  const insertPost = () => {
+    if (!validateFields()) {
+      return;
+    }
+
+    const title = refs.current.title.value;
+    const content = refs.current.editor.getInstance().getMarkdown();
+
+    // 정규표현식을 이용한 태그 제거
+    const markdownImageRegex = /\[.*\]\((.*)\)/gi;
+    const markdownRegex = /(\*|_|#|`|~|>|!|\[|\]|\(|\)|\{|\}|\||\\)/gi;
+
+    const summary = content
+      .replace(markdownImageRegex, "")
+      .replace(markdownRegex, "")
+      .substring(0, 151);
+
+    const imageList = content.match(markdownImageRegex);
+    const thumbnailMarkdown = imageList != null ? imageList[0] : null;
+
+    const thumbnail =
+      thumbnailMarkdown != null
+        ? thumbnailMarkdown.substring(
+            thumbnailMarkdown.indexOf("](") + 2,
+            thumbnailMarkdown.length - 1
+          )
+        : null;
+
+    const newPost = {
+      title: title,
+      thumbnail: thumbnail,
+      content: content,
+      summary: summary,
+    };
+
+    customAxios
+      .privateAxios({
+        method: `post`,
+        url: ``,
+        data: newPost,
+      })
+      .then((response) => {
+        if (response.status === 201) {
+          alert("게시하였습니다.");
+          navigate(`/post/${response.data.content.idx}`, { replace: true });
+        } else {
+          alert(response.data.message);
+        }
+      })
+      .catch((error) => {
+        if (error?.response?.data?.detail != null) {
+          alert(JSON.stringify(error?.response?.data?.detail));
+        } else if (error?.response?.data?.message != null) {
+          alert(error.response.data.message);
+        } else {
+          alert("오류가 발생했습니다. 관리자에게 문의하세요.");
+        }
+      })
+      .finally(() => {});
+  };
+
   useEffect(() => {
-    refs.current.editor.getInstance().setMarkdown("");
-    setEditorHeight(`${window.innerHeight - 190}px`);
-    window.onresize = () => setEditorHeight(`${window.innerHeight - 190}px`);
-  }, []);
+    if (authStore.loginUser != null) {
+      refs.current.editor.getInstance().setMarkdown("");
+      setEditorHeight(`${window.innerHeight - 190}px`);
+      window.onresize = () => setEditorHeight(`${window.innerHeight - 190}px`);
+      tempPostCheck();
+    }
+  }, [authStore]);
+
+  // 로그인 상태확인해서 로그인페이지로 이동시키기
+  useEffect(() => {
+    if (authStore.loginUser === null) {
+      alert("로그인이 필요합니다.");
+      navigate("/login", { replace: true });
+    }
+  }, [authStore, navigate]);
 
   return (
     <WriteLayout>
@@ -51,7 +170,11 @@ const InsertPost = () => {
           </Link>
         </Col>
         <Col className="col-auto">
-          <Button className="btn-light fw-bold" type="button">
+          <Button
+            className="btn-light fw-bold"
+            type="button"
+            onClick={tempPostSave}
+          >
             임시저장
           </Button>
         </Col>
