@@ -47,13 +47,13 @@ class CustomAxios {
         window.location.replace("/login");
       } else {
         // refreshToken 유효
-        const { response, error } = await customAxios.publicAxios({
+        const response = await customAxios.publicAxios({
           method: `post`,
           url: `/api/v1/sign/refresh`,
           data: { refreshToken },
         });
 
-        if (error || response.status !== 200) {
+        if (response.status !== 200) {
           // window.location.replace("/login"); 를 해도 되고
           throw new axios.Cancel("리프레시 토큰이 만료되었습니다.");
         } else {
