@@ -14,6 +14,7 @@ class CustomAxios {
       baseURL: BASE_URL,
       withCredentials: true,
     });
+    this.privateAxios.interceptors.request.use(this._requestPrivateInterceptor);
   }
 
   _requestPrivateInterceptor = async (config) => {
