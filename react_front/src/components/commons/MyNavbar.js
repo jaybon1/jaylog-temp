@@ -78,11 +78,10 @@ const MyNavbar = () => {
                       href="#"
                       className="dropdown-item"
                       onClick={() => {
-                        authStore.setLoginUser(null);
-                        navigate("/", { replace: true });
+                        navigate("/login", { replace: true });
                       }}
                     >
-                        로그아웃
+                      로그아웃
                     </Anchor>
                   </NavDropdown>
                 ) : null}
