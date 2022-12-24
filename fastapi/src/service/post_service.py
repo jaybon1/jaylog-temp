@@ -16,7 +16,21 @@ from util import functions
 
 AUTHORIZATION_ERROR = {"code": 1, "message": "인증되지 않은 사용자입니다."}
 ID_ERROR = {"code": 2, "message": "계정에 문제가 있습니다."}
+POST_NOT_EXIST_ERROR = {"code": 3, "message": "해당 글이 없습니다."}
 INTERNAL_SERVER_ERROR = {"code": 99, "message": "서버 내부 에러입니다."}
+
+
+def get_post(request: Request, post_idx: int, db: Session) -> JSONResponse:
+    auth_user: sign_dto.AccessJwt | None = request.state.user
+
+    post_entity: PostEntity = db.query(PostEntity).filter(
+        PostEntity.idx == post_idx).filter(
+            PostEntity.delete_date == None).first()
+
+    if post_entity == None:
+        return functions.res_generator(400, POST_NOT_EXIST_ERROR)
+
+    return functions.res_generator(content=post_dto.ResDetailPost.toDTO(post_entity, auth_user))
 
 
 def get_posts(db: Session):

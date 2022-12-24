@@ -3,13 +3,18 @@ from sqlalchemy.orm import Session
 
 from dependencies import get_db
 from dto import post_dto
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Path, Request
 from service import post_service
 
 router = APIRouter(
     prefix="/api/v1/posts",
     tags=["post"]
 )
+
+
+@router.get("/{post_idx}")
+async def get_post(request: Request, post_idx: int = Path(), db: Session = Depends(get_db)) -> JSONResponse:
+    return post_service.get_post(request, post_idx, db)
 
 
 @router.get("/")
