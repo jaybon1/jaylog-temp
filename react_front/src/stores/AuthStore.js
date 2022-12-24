@@ -15,7 +15,8 @@ const AuthStore = () => {
   useEffect(() => {
     const accessToken = localStorage.getItem("accessToken");
     setLoginUserByToken(accessToken);
-  }, []);
+  }, [setLoginUserByToken]);
+
   useEffect(() => {
     if (loginUser === null) {
       localStorage.removeItem("accessToken");
